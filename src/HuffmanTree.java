@@ -4,20 +4,23 @@ import java.util.Map;
 import java.util.HashMap;
 
 public class HuffmanTree {
-    public static int[] buildFrequencyArray(InputStream in) throws IOException {
+    public int[] buildFrequencyArray(InputStream in) throws IOException {
         int[] frequencies = new int[IHuffConstants.ALPH_SIZE + 1]; // 257
-        BitInputStream frequencyBits = new BitInputStream(in);
-        int numBits = frequencyBits.readBits(IHuffConstants.BITS_PER_WORD);
+        BitInputStream bitInput = new BitInputStream(in);
+        int numBits = bitInput.readBits(IHuffConstants.BITS_PER_WORD);
         while (numBits != -1) {
             frequencies[numBits]++;
-            numBits = frequencyBits.readBits(IHuffConstants.BITS_PER_WORD);
+            numBits = bitInput.readBits(IHuffConstants.BITS_PER_WORD);
         }
-        frequencyBits.close();
+        bitInput.close();
         return frequencies;
     }
 
-    public static TreeNode buildHuffmanTree(int[] frequencies) {
+    public TreeNode buildHuffmanTree(int[] frequencies) {
         PriorityQueue314<TreeNode> treeQueue = initialfrequencyQueue(frequencies);
+        if (treeQueue.isEmpty()) {
+            return null;
+        }
         // build tree
         while (treeQueue.size() > 1) { // can build subtrees
             TreeNode leftNode = treeQueue.dequeue();
@@ -30,19 +33,19 @@ public class HuffmanTree {
         return root;
     }
 
-    private static PriorityQueue314<TreeNode> initialfrequencyQueue(int[] frequencies) {
+    private PriorityQueue314<TreeNode> initialfrequencyQueue(int[] frequencies) {
         PriorityQueue314<TreeNode> treeQueue = new PriorityQueue314<>();
         // enqueue all frequency nodes where node exists
-        for (int frequency: frequencies) {
-            if (frequency != -1) {
-                TreeNode bitNode = new TreeNode(null, frequency, null);
+        for (int i = 0; i < frequencies.length; i++) {
+            if (frequencies[i] != 0) {
+                TreeNode bitNode = new TreeNode(null, i, null);
                 treeQueue.enqueue(bitNode);
             }
         }
         return treeQueue;
     }
 
-    public static Map<Integer, String> createMap(TreeNode root) {
+    public Map<Integer, String> createMap(TreeNode root) {
         if (root == null) {
             throw new IllegalArgumentException("Root cannot be null");
         }
@@ -51,7 +54,7 @@ public class HuffmanTree {
         return huffMap;
     }
 
-    private static void recurse(Map<Integer, String> huffMap, TreeNode huffNode, String path) {
+    private void recurse(Map<Integer, String> huffMap, TreeNode huffNode, String path) {
         if (huffNode.isLeaf()) {
             huffMap.put(huffNode.getValue(), path);
         }

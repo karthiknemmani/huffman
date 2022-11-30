@@ -42,10 +42,11 @@ public class SimpleHuffProcessor implements IHuffProcessor {
      * @throws IOException if an error occurs while reading from the input file.
      */
     public int preprocessCompress(InputStream in, int headerFormat) throws IOException {
-        showString("Not working yet");
-        myViewer.update("Still not working");
-        throw new IOException("preprocess not implemented");
-        //return 0;
+        // showString("Not working yet");
+        // myViewer.update("Still not working");
+        // throw new IOException("preprocess not implemented");
+
+        return 0;
     }
 
     /**
@@ -77,8 +78,35 @@ public class SimpleHuffProcessor implements IHuffProcessor {
      * writing to the output file.
      */
     public int uncompress(InputStream in, OutputStream out) throws IOException {
-	        throw new IOException("uncompress not implemented");
-	        //return 0;
+        // read and write bits from tree
+        TreeNode root = buildTree(in);
+        BitInputStream bitInput = new BitInputStream(in);
+        BitOutputStream bitOutput = new BitOutputStream(out);
+        int numBits = 0;
+        int bit = bitInput.readBits(1); // either 0 or 1
+        while (bit != -1) {
+            TreeNode dummyNode = root;
+            while (!dummyNode.isLeaf()) {
+                if (bit == 0) {
+                    dummyNode = dummyNode.getLeft();
+                } else { // 1
+                    dummyNode = dummyNode.getRight();
+                }
+                numBits++;
+            }
+            bitOutput.writeBits(IHuffConstants.BITS_PER_WORD, dummyNode.getValue());
+            bit = bitInput.readBits(1);
+        }
+        bitInput.close();
+        bitOutput.close();
+	    return numBits;
+    }
+
+    private TreeNode buildTree(InputStream in)throws IOException {
+        HuffmanTree huff = new HuffmanTree();
+        int[] frequencies = huff.buildFrequencyArray(in);
+        TreeNode root = huff.buildHuffmanTree(frequencies);
+        return root;
     }
 
     public void setViewer(IHuffViewer viewer) {
